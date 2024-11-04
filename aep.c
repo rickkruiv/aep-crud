@@ -220,6 +220,7 @@ void listarUsuarios()
    }
    else
    {
+      linhaColuna(2,46);
       printf("SEM USUARIOS CADASTRADOS");
    }
 
