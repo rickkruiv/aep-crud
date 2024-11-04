@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <stdbool.h>
 #include <conio.h>
+#include <string.h>
 
 // Alteração de Usuários
 // Exclusão de Usuários
@@ -15,6 +16,33 @@ void linhaColuna(int lin, int col);
 void TextColor(int letra, int fundo);
 int menu(int lin1, int col1, int qtd, char lista[3][40]);
 
+#define MAX_USUARIOS 100
+
+// COR DA LETRA
+enum
+{
+   BLACK,
+   WHITE
+};
+// COR DO FUNDO
+enum
+{
+   _BLACK = 0,
+   _WHITE = 240
+};
+
+int qtdUsuarios;
+
+struct Usuarios
+{
+   int id;
+   char nome[30];
+   char senha[10];
+};
+
+struct Usuarios usuario[MAX_USUARIOS];
+int indiceUsuario = 0;
+
 void clear()
 {
 #ifdef _WIN32
@@ -23,47 +51,6 @@ void clear()
    system("clear");
 #endif
 }
-
-// COR DA LETRA
-enum
-{
-   BLACK,        // 0
-   BLUE,         // 1
-   GREEN,        // 2
-   CYAN,         // 3
-   RED,          // 4
-   MAGENTA,      // 5
-   BROWN,        // 6
-   LIGHTGRAY,    // 7
-   DARKGRAY,     // 8
-   LIGHTBLUE,    // 9
-   LIGHTGREEN,   // 10
-   LIGHTCYAN,    // 11
-   LIGHTRED,     // 12
-   LIGHTMAGENTA, // 13
-   YELLOW,       // 14
-   WHITE         // 15
-};
-// COR DO FUNDO
-enum
-{
-   _BLACK = 0,          // 0
-   _BLUE = 16,          // 1
-   _GREEN = 32,         // 2
-   _CYAN = 48,          // 3
-   _RED = 64,           // 4
-   _MAGENTA = 80,       // 5
-   _BROWN = 96,         // 6
-   _LIGHTGRAY = 112,    // 7
-   _DARKGRAY = 128,     // 8
-   _LIGHTBLUE = 144,    // 9
-   _LIGHTGREEN = 160,   // 10
-   _LIGHTCYAN = 176,    // 11
-   _LIGHTRED = 192,     // 12
-   _LIGHTMAGENTA = 208, // 13
-   _YELLOW = 224,       // 14
-   _WHITE = 240         // 15
-};
 
 void linhaColuna(int lin, int col)
 {
@@ -155,14 +142,22 @@ int menu(int lin1, int col1, int qtd, char lista[3][40])
    return opc;
 }
 
+// Função para guardar um usuário na memória
+void guardarNaMemoria(int indice, int id, char nome[30], char senha[10])
+{
+   usuario[indice].id = id;
+   strcpy(usuario[indice].nome, nome);
+   strcpy(usuario[indice].senha, senha);
+}
+
 // TESTE PARA CRIAÇÃO DE NOVO USUARIO
-void criarUsuario() {
+void criarUsuario()
+{
    char nome[30];
    char senha[10];
    int id;
 
-   linhaColuna(1,1);
-
+   linhaColuna(10, 1);
    printf("ID: ");
    scanf("%i", &id);
 
@@ -174,11 +169,42 @@ void criarUsuario() {
    fflush(stdin);
    gets(senha);
 
+   guardarNaMemoria(qtdUsuarios, id, nome, senha);
+   qtdUsuarios++;
+
    main();
+}
+
+void listarUsuarios()
+{
+   int i, tecla;
+
+   if (qtdUsuarios > 0)
+      {
+         for (i = 0; i < qtdUsuarios; i++)
+         {
+            printf("-----------------------------\n");
+            printf("USUARIO %i\n", i + 1);
+            printf("ID: %i\n", usuario[i].id);
+            printf("NOME: %s\n", usuario[i].nome);
+            printf("SENHA: %s\n", usuario[i].senha);
+         }
+      } else {
+         printf("SEM USUARIOS CADASTRADOS");
+      }
+
+   tecla = getch();
+
+   if ((tecla == 27) || (tecla == 13))
+   {
+      clear();
+      exit;
+   }
 }
 
 int main()
 {
+
    int opc;
    char lista[6][40] = {"CRIAR NOVO USUARIO", "ATUALIZAR USUARIO", "EXCLUIR USUARIO", "LISTAR USUARIOS", "GERAR CSV", "SAIR"};
 
@@ -189,10 +215,17 @@ int main()
    {
       opc = menu(10, 10, 6, lista);
 
-      if (opc == 1) {
+      if (opc == 1)
+      {
          clear();
          criarUsuario();
          break;
+      }
+
+      if (opc == 4)
+      {
+         clear();
+         listarUsuarios();
       }
 
       if (opc == 6)
