@@ -10,6 +10,7 @@
 // Listagem de Usuários
 // Obrigatoriamente os dados para esta versão beta deverão ser armazenados em um arquivo de texto simples (TXT) com dados criptografados.
 
+int main();
 void linhaColuna(int lin, int col);
 void TextColor(int letra, int fundo);
 int menu(int lin1, int col1, int qtd, char lista[3][40]);
@@ -67,6 +68,12 @@ enum
 void linhaColuna(int lin, int col)
 {
    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), (COORD){col - 1, lin - 1});
+
+   HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+   CONSOLE_CURSOR_INFO info;
+   info.dwSize = 100;
+   info.bVisible = FALSE;
+   SetConsoleCursorInfo(consoleHandle, &info);
 }
 
 void TextColor(int letra, int fundo)
@@ -125,15 +132,49 @@ int menu(int lin1, int col1, int qtd, char lista[3][40])
       else if (tecla == 72)
       {
          if (opc > 1)
+         {
             opc--;
+         }
+         else
+         {
+            opc = qtd;
+         }
       }
       else if (tecla == 80)
       {
          if (opc < qtd)
+         {
             opc++;
+         }
+         else
+         {
+            opc = 1;
+         }
       }
    }
    return opc;
+}
+
+// TESTE PARA CRIAÇÃO DE NOVO USUARIO
+void criarUsuario() {
+   char nome[30];
+   char senha[10];
+   int id;
+
+   linhaColuna(1,1);
+
+   printf("ID: ");
+   scanf("%i", &id);
+
+   printf("\nNOME: ");
+   fflush(stdin);
+   gets(nome);
+
+   printf("\nSENHA: ");
+   fflush(stdin);
+   gets(senha);
+
+   main();
 }
 
 int main()
@@ -148,15 +189,18 @@ int main()
    {
       opc = menu(10, 10, 6, lista);
 
+      if (opc == 1) {
+         clear();
+         criarUsuario();
+         break;
+      }
+
       if (opc == 6)
       {
          TextColor(WHITE, _BLACK);
          clear();
          break;
       }
-
-      linhaColuna(1, 1);
-      printf("%i", opc);
    }
 
    TextColor(WHITE, _BLACK);
