@@ -17,7 +17,7 @@ void TextColor(int letra, int fundo);
 int menu(int lin1, int col1, int qtd, char lista[3][40]);
 void criarUsuario();
 bool verificarUsuario(int id, char nome[30]);
-void carregarUsuariosDoCSV();
+void carregarUsuariosDoTXT();
 
 #define MAX_USUARIOS 100
 // COR DA LETRA
@@ -252,7 +252,7 @@ void listarUsuarios()
 {
    int i, tecla;
 
-   carregarUsuariosDoCSV();
+   carregarUsuariosDoTXT();
 
    if (qtdUsuarios > 0)
    {
@@ -281,10 +281,10 @@ void listarUsuarios()
    }
 }
 
-// Gerar CSV
-void gerarCSV(struct Usuarios usuario[MAX_USUARIOS], int quantidade)
+// Gerar TXT
+void gerarTXT(struct Usuarios usuario[MAX_USUARIOS], int quantidade)
 {
-   FILE *arquivo = fopen("dados.csv", "w");
+   FILE *arquivo = fopen("dados.txt", "w");
 
    if (arquivo == NULL)
    {
@@ -293,7 +293,7 @@ void gerarCSV(struct Usuarios usuario[MAX_USUARIOS], int quantidade)
       return;
    }
 
-   // Cabeçalho do CSV
+   // Cabeçalho do TXT
    fprintf(arquivo, "ID,NOME,SENHA\n");
 
    for (int i = 0; i < quantidade; i++)
@@ -303,17 +303,17 @@ void gerarCSV(struct Usuarios usuario[MAX_USUARIOS], int quantidade)
 
    fclose(arquivo);
    linhaColuna(1,40);
-   printf("\033[32mArquivo CSV GERADO COM SUCESSO!\033[0m\n");
+   printf("\033[32mArquivo TXT GERADO COM SUCESSO!\033[0m\n");
 }
 
-void carregarUsuariosDoCSV()
+void carregarUsuariosDoTXT()
 {
-   FILE *arquivo = fopen("dados.csv", "r");
+   FILE *arquivo = fopen("dados.txt", "r");
 
    if (arquivo == NULL)
    {
       linhaColuna(1, 44);
-      printf("\033[31mERRO AO ABRIR O ARQUIVO CSV\033[0m\n");
+      printf("\033[31mERRO AO ABRIR O ARQUIVO TXT\033[0m\n");
       return;
    }
 
@@ -343,7 +343,7 @@ int main()
 {
 
    int opc;
-   char lista[6][40] = {"CRIAR NOVO USUARIO", "ATUALIZAR USUARIO", "EXCLUIR USUARIO", "LISTAR USUARIOS", "GERAR CSV", "SAIR"};
+   char lista[6][40] = {"CRIAR NOVO USUARIO", "ATUALIZAR USUARIO", "EXCLUIR USUARIO", "LISTAR USUARIOS", "GERAR TXT", "SAIR"};
 
    setlocale(LC_ALL, "portuguese");
    clear();
@@ -367,7 +367,7 @@ int main()
 
       if (opc == 5) {
          clear();
-         gerarCSV(usuario, qtdUsuarios);
+         gerarTXT(usuario, qtdUsuarios);
       }
 
       if (opc == 6)
