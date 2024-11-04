@@ -15,6 +15,8 @@ int main();
 void linhaColuna(int lin, int col);
 void TextColor(int letra, int fundo);
 int menu(int lin1, int col1, int qtd, char lista[3][40]);
+void criarUsuario();
+bool verificarUsuario(int id, char nome[30]);
 
 #define MAX_USUARIOS 100
 
@@ -178,28 +180,71 @@ void guardarNaMemoria(int indice, int id, char nome[30], char senha[10])
    strcpy(usuario[indice].senha, senha);
 }
 
+// Verificar se usuario ja existe
+bool verificarUsuario(int id, char nome[30])
+{
+   for (int i = 0; i < qtdUsuarios; i++)
+   {
+      if (usuario[i].id == id || strcmp(usuario[i].nome, nome) == 0)
+      {
+         return true;
+      }
+   }
+   return false;
+}
+
 // TESTE PARA CRIAÇÃO DE NOVO USUARIO
 void criarUsuario()
 {
    char nome[30];
    char senha[10];
-   int id;
+   int id, tecla;
+   while (true)
+   {
+      linhaColuna(10, 1);
+      printf("ID: ");
+      scanf("%i", &id);
 
-   linhaColuna(10, 1);
-   printf("ID: ");
-   scanf("%i", &id);
+      printf("\nNOME: ");
+      fflush(stdin);
+      gets(nome);
 
-   printf("\nNOME: ");
-   fflush(stdin);
-   gets(nome);
+      if (verificarUsuario(id, nome))
+      {
+         linhaColuna(1, 45);
+         printf("\033[31mERRO: USUARIO COM ID OU NOME JA CADASTRADO!\033[0m\n");
+         linhaColuna(2, 50);
+         printf("\033[91m[ENTER] PARA INSERIR NOVOS DADOS\n");
+         linhaColuna(3, 53);
+         printf("\033[91m[ESC] PARA VOLTAR PARA MENU\033[0m\n");
 
-   printf("\nSENHA: ");
-   fflush(stdin);
-   gets(senha);
+         tecla = getch();
 
-   guardarNaMemoria(qtdUsuarios, id, nome, senha);
-   qtdUsuarios++;
+         if (tecla == 27)
+         {
+            break;
+         }
+         else
+         {
+            linhaColuna(10, 5);
+            printf("       "); // Limpa o ID
+            linhaColuna(12, 6);
+            printf("                             "); // Limpa o nome
+            linhaColuna(15, 1);
 
+            continue;
+         }
+      }
+
+      printf("\nSENHA: ");
+      fflush(stdin);
+      gets(senha);
+
+      guardarNaMemoria(qtdUsuarios, id, nome, senha);
+      qtdUsuarios++;
+
+      break;
+   }
    main();
 }
 
@@ -213,14 +258,15 @@ void listarUsuarios()
       {
          printf("-----------------------------\n");
          printf("USUARIO %i\n", i + 1);
-         printf("ID: %i\n", usuario[i].id);
-         printf("NOME: %s\n", usuario[i].nome);
+         printf("ID...: %i\n", usuario[i].id);
+         printf("NOME.: %s\n", usuario[i].nome);
          printf("SENHA: %s\n", usuario[i].senha);
       }
+      printf("-----------------------------\n");
    }
    else
    {
-      linhaColuna(2,46);
+      linhaColuna(2, 46);
       printf("SEM USUARIOS CADASTRADOS");
    }
 
