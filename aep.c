@@ -17,9 +17,9 @@ void TextColor(int letra, int fundo);
 int menu(int lin1, int col1, int qtd, char lista[3][40]);
 void criarUsuario();
 bool verificarUsuario(int id, char nome[30]);
+void carregarUsuariosDoCSV();
 
 #define MAX_USUARIOS 100
-
 // COR DA LETRA
 enum
 {
@@ -252,6 +252,8 @@ void listarUsuarios()
 {
    int i, tecla;
 
+   carregarUsuariosDoCSV();
+
    if (qtdUsuarios > 0)
    {
       for (i = 0; i < qtdUsuarios; i++)
@@ -279,6 +281,64 @@ void listarUsuarios()
    }
 }
 
+// Gerar CSV
+void gerarCSV(struct Usuarios usuario[MAX_USUARIOS], int quantidade)
+{
+   FILE *arquivo = fopen("dados.csv", "w");
+
+   if (arquivo == NULL)
+   {
+      linhaColuna(1, 45);
+      printf("\033[31mERRO AO ABRIR O ARQUIVO\033[0m\n");
+      return;
+   }
+
+   // Cabeçalho do CSV
+   fprintf(arquivo, "ID,NOME,SENHA\n");
+
+   for (int i = 0; i < quantidade; i++)
+   {
+      fprintf(arquivo, "%d,%s,%s\n", usuario[i].id, usuario[i].nome, usuario[i].senha);
+   }
+
+   fclose(arquivo);
+   linhaColuna(1,40);
+   printf("\033[32mArquivo CSV GERADO COM SUCESSO!\033[0m\n");
+}
+
+void carregarUsuariosDoCSV()
+{
+   FILE *arquivo = fopen("dados.csv", "r");
+
+   if (arquivo == NULL)
+   {
+      linhaColuna(1, 44);
+      printf("\033[31mERRO AO ABRIR O ARQUIVO CSV\033[0m\n");
+      return;
+   }
+
+   char linha[100];
+   int id;
+   char nome[30], senha[10];
+
+   // Ignora o cabeçalho
+   fgets(linha, sizeof(linha), arquivo);
+
+   qtdUsuarios = 0; // Reinicia a contagem de usuários
+
+   while (fgets(linha, sizeof(linha), arquivo))
+   {
+      // Extrai os dados da linha usando sscanf
+      sscanf(linha, "%d,%29[^,],%9[^\n]", &id, nome, senha);
+
+      // Armazena o usuário na estrutura
+      guardarNaMemoria(qtdUsuarios, id, nome, senha);
+      qtdUsuarios++;
+   }
+
+   fclose(arquivo);
+}
+
 int main()
 {
 
@@ -303,6 +363,11 @@ int main()
       {
          clear();
          listarUsuarios();
+      }
+
+      if (opc == 5) {
+         clear();
+         gerarCSV(usuario, qtdUsuarios);
       }
 
       if (opc == 6)
