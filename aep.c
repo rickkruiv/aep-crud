@@ -6,62 +6,7 @@
 #include <conio.h>
 #include <string.h>
 
-// Alteração de Usuários
-// Exclusão de Usuários
-// Listagem de Usuários
-// Obrigatoriamente os dados para esta versão beta deverão ser armazenados em um arquivo de texto simples (TXT) com dados criptografados.
-
-int main();
-void linhaColuna(int lin, int col);
-void TextColor(int letra, int fundo);
-int menu(int lin1, int col1, int qtd, char lista[3][40]);
-void criarUsuario();
-bool verificarUsuario(int id, char nome[30]);
-void carregarUsuariosDoCSV();
-
 #define MAX_USUARIOS 100
-// COR DA LETRA
-enum
-{
-   BLACK,        // 0
-   BLUE,         // 1
-   GREEN,        // 2
-   CYAN,         // 3
-   RED,          // 4
-   MAGENTA,      // 5
-   BROWN,        // 6
-   LIGHTGRAY,    // 7
-   DARKGRAY,     // 8
-   LIGHTBLUE,    // 9
-   LIGHTGREEN,   // 10
-   LIGHTCYAN,    // 11
-   LIGHTRED,     // 12
-   LIGHTMAGENTA, // 13
-   YELLOW,       // 14
-   WHITE         // 15
-};
-// COR DO FUNDO
-enum
-{
-   _BLACK = 0,          // 0
-   _BLUE = 16,          // 1
-   _GREEN = 32,         // 2
-   _CYAN = 48,          // 3
-   _RED = 64,           // 4
-   _MAGENTA = 80,       // 5
-   _BROWN = 96,         // 6
-   _LIGHTGRAY = 112,    // 7
-   _DARKGRAY = 128,     // 8
-   _LIGHTBLUE = 144,    // 9
-   _LIGHTGREEN = 160,   // 10
-   _LIGHTCYAN = 176,    // 11
-   _LIGHTRED = 192,     // 12
-   _LIGHTMAGENTA = 208, // 13
-   _YELLOW = 224,       // 14
-   _WHITE = 240         // 15
-};
-
-int qtdUsuarios;
 
 struct Usuarios
 {
@@ -71,9 +16,61 @@ struct Usuarios
 };
 
 struct Usuarios usuario[MAX_USUARIOS];
+int qtdUsuarios = 0;
 int indiceUsuario = 0;
 
-void clear()
+int main();
+int menu(int lin1, int col1, int qtd, char lista[3][40]);
+void criarUsuario();
+void guardarNaMemoria(int indice, int id, char nome[30], char senha[10]);
+bool verificarUsuario(int id, char nome[30]);
+void linhaColuna(int lin, int col);
+void textcolor(int letra, int fundo);
+void gerarTXT(struct Usuarios usuario[MAX_USUARIOS], int quantidade);
+void carregarUsuariosDoTXT();
+void listarUsuarios();
+
+enum // COR DA LETRA
+{
+   BLACK,
+   BLUE,
+   GREEN,
+   CYAN,
+   RED,
+   MAGENTA,
+   BROWN,
+   LIGHTGRAY,
+   DARKGRAY,
+   LIGHTBLUE,
+   LIGHTGREEN,
+   LIGHTCYAN,
+   LIGHTRED,
+   LIGHTMAGENTA,
+   YELLOW,
+   WHITE
+};
+
+enum // COR DO FUNDO
+{
+   _BLACK = 0,
+   _BLUE = 16,
+   _GREEN = 32,
+   _CYAN = 48,
+   _RED = 64,
+   _MAGENTA = 80,
+   _BROWN = 96,
+   _LIGHTGRAY = 112,
+   _DARKGRAY = 128,
+   _LIGHTBLUE = 144,
+   _LIGHTGREEN = 160,
+   _LIGHTCYAN = 176,
+   _LIGHTRED = 192,
+   _LIGHTMAGENTA = 208,
+   _YELLOW = 224,
+   _WHITE = 240
+};
+
+void clear() // limpar cmd
 {
 #ifdef _WIN32
    system("cls");
@@ -82,7 +79,7 @@ void clear()
 #endif
 }
 
-void linhaColuna(int lin, int col)
+void linhaColuna(int lin, int col) // procedimento linha e coluna
 {
    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), (COORD){col - 1, lin - 1});
 
@@ -93,13 +90,241 @@ void linhaColuna(int lin, int col)
    SetConsoleCursorInfo(consoleHandle, &info);
 }
 
-void TextColor(int letra, int fundo)
+void textcolor(int letra, int fundo) // procedmento cores texto e fundo
 {
    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), letra + fundo);
 }
 
-int menu(int lin1, int col1, int qtd, char lista[3][40])
+void criarUsuario() // novo usurio
 {
+   char nome[30];
+   char senha[10];
+   int id, tecla;
+
+   while (true)
+   {
+      linhaColuna(10, 1);
+      printf("ID: ");
+      scanf("%i", &id);
+      printf("\nNOME: ");
+      fflush(stdin);
+      gets(nome);
+      nome[strcspn(nome, "\n")] = 0;
+
+      if (verificarUsuario(id, nome))
+      {
+         linhaColuna(1, 45);
+         printf("\033[31mERRO: USUARIO COM ID OU NOME JA CADASTRADO!\033[0m\n");
+         linhaColuna(2, 50);
+         printf("\033[91m[ENTER] PARA INSERIR NOVOS DADOS\n");
+         linhaColuna(3, 53);
+         printf("\033[91m[ESC] PARA VOLTAR PARA MENU\033[0m\n");
+         tecla = getch();
+         if (tecla == 27)
+         {
+            break;
+         }
+         else
+         {
+            linhaColuna(10, 5);
+            printf("             "); // Limpa o ID
+            linhaColuna(12, 6);
+            printf("             "); // Limpa o nome
+            linhaColuna(15, 1);
+            continue;
+         }
+      }
+
+      printf("\nSENHA: ");
+      fflush(stdin);
+      gets(senha);
+      senha[strcspn(senha, "\n")] = 0;
+
+      guardarNaMemoria(qtdUsuarios, id, nome, senha);
+      qtdUsuarios++;
+
+      gerarTXT(usuario, qtdUsuarios);
+      break;
+   }
+
+   main();
+}
+
+int procurarUsuario()
+{
+   int id, encontrou = -1;
+
+   linhaColuna(10, 1);
+   printf("DIGITE O ID DO USUARIO QUE DESEJA ATUALIZAR: ");
+   scanf("%d", &id);
+
+   for (int i = 0; i < qtdUsuarios; i++)
+   {
+      if (usuario[i].id == id)
+      {
+         encontrou = i;
+         break;
+      }
+   }
+
+   if (encontrou == -1)
+   {
+      linhaColuna(1, 45);
+      printf("\033[31mUSUARIO COM ID %d NAO ENCONTRADO\033[0m", id);
+      Sleep(800);
+
+      linhaColuna(1, 30);
+      printf("                                                              ");
+   }
+   return encontrou;
+}
+
+void atualizarUsuario()
+{
+   char novoNome[30], novaSenha[10];
+   int indice;
+   // procura
+   indice = procurarUsuario();
+
+   if (indice == -1) 
+   {
+      return;
+   }
+
+   // atualizar
+   linhaColuna(10, 1);
+   printf("\nNOME: ");
+   fflush(stdin);
+   gets(novoNome);
+   novoNome[strcspn(novoNome, "\n")] = 0;
+
+   printf("Digite a nova senha: ");
+   fflush(stdin);
+   fgets(novaSenha, sizeof(novaSenha), stdin);
+   novaSenha[strcspn(novaSenha, "\n")] = 0;
+
+   strcpy(usuario[indice].nome, novoNome);
+   strcpy(usuario[indice].senha, novaSenha);
+
+   gerarTXT(usuario, qtdUsuarios);
+
+   linhaColuna(1, 30);
+   printf("USUÁRIO ATUALIZADO COM SUCESSO!\n");
+}
+
+void excluirUsuario()
+{
+   int indice;
+   // procura
+   indice = procurarUsuario();
+
+   // exluir
+   for (int i = indice; i < qtdUsuarios; i++)
+   {
+      usuario[i] = usuario[i + 1];
+   }
+
+   qtdUsuarios--;
+
+   gerarTXT(usuario, qtdUsuarios);
+
+   linhaColuna(1, 30);
+   printf("USUÁRIO EXCLUÍDO COM SUCESSO!\n");
+}
+
+void guardarNaMemoria(int indice, int id, char nome[30], char senha[10]) // Função para guardar um usuário na memória
+{
+   usuario[indice].id = id;
+   strcpy(usuario[indice].nome, nome);
+   strcpy(usuario[indice].senha, senha);
+}
+
+bool verificarUsuario(int id, char nome[30]) // Verificar se usuario ja existe
+{
+   for (int i = 0; i < qtdUsuarios; i++)
+   {
+      if (usuario[i].id == id || strcmp(usuario[i].nome, nome) == 0)
+      {
+         return true;
+      }
+   }
+   return false;
+}
+
+void gerarTXT(struct Usuarios usuario[MAX_USUARIOS], int quantidade) // gerar txt
+{
+   FILE *arquivo = fopen("dados.txt", "w");
+   if (arquivo == NULL)
+   {
+      linhaColuna(1, 45);
+      printf("\033[31mERRO AO ABRIR O ARQUIVO\033[0m\n");
+      return;
+   }
+   fprintf(arquivo, "ID,NOME,SENHA\n");
+   for (int i = 0; i < quantidade; i++)
+   {
+      fprintf(arquivo, "%d,%s,%s\n", usuario[i].id, usuario[i].nome, usuario[i].senha);
+   }
+   fclose(arquivo);
+   linhaColuna(1, 40);
+   printf("\033[32mArquivo TXT GERADO COM SUCESSO!\033[0m\n");
+}
+
+void carregarUsuariosDoTXT() // puxar dados do txt
+{
+   FILE *arquivo = fopen("dados.txt", "r");
+   if (arquivo == NULL)
+   {
+      linhaColuna(1, 44);
+      printf("\033[31mERRO AO ABRIR O ARQUIVO TXT\033[0m\n");
+      return;
+   }
+   char linha[100];
+   int id;
+   char nome[30], senha[10];
+   fgets(linha, sizeof(linha), arquivo);
+   qtdUsuarios = 0;
+   while (fgets(linha, sizeof(linha), arquivo))
+   {
+      sscanf(linha, "%d,%29[^,],%9[^\n]", &id, nome, senha);
+      guardarNaMemoria(qtdUsuarios, id, nome, senha);
+      qtdUsuarios++;
+   }
+   fclose(arquivo);
+}
+
+void listarUsuarios() // listar
+{
+   int i, tecla;
+   if (qtdUsuarios > 0)
+   {
+      for (i = 0; i < qtdUsuarios; i++)
+      {
+         printf("-----------------------------\n");
+         printf("USUARIO %i\n", i + 1);
+         printf("ID...: %i\n", usuario[i].id);
+         printf("NOME.: %s\n", usuario[i].nome);
+         printf("SENHA: %s\n", usuario[i].senha);
+      }
+      printf("-----------------------------\n");
+   }
+   else
+   {
+      linhaColuna(2, 46);
+      printf("SEM USUARIOS CADASTRADOS");
+   }
+   tecla = getch();
+   if ((tecla == 27) || (tecla == 13))
+   {
+      clear();
+      exit;
+   }
+}
+
+int menu(int lin1, int col1, int qtd, char lista[3][40]) // funcao menu
+{
+
+   clear();
    int opc = 1, lin2, col2, linha, i, tamMaxItem, tecla;
 
    tamMaxItem = strlen(lista[0]);
@@ -114,7 +339,7 @@ int menu(int lin1, int col1, int qtd, char lista[3][40])
    lin2 = lin1 + (qtd * 2 + 2);
    col2 = col1 + tamMaxItem + 4;
 
-   TextColor(WHITE, _BLACK);
+   textcolor(WHITE, _BLACK);
    setlocale(LC_ALL, "C");
    setlocale(LC_ALL, "");
 
@@ -125,11 +350,22 @@ int menu(int lin1, int col1, int qtd, char lista[3][40])
       for (i = 0; i < qtd; i++)
       {
          if (i + 1 == opc)
-            TextColor(BLACK, _WHITE);
+         {
+            linhaColuna(linha, col1 + 2);
+            printf("                            ");
+            textcolor(BLACK, _WHITE);
+            linhaColuna(linha, col1 + 3);
+            printf("%s", lista[i]);
+            linhaColuna(linha, col1 + 2);
+         }
          else
-            TextColor(WHITE, _BLACK);
-         linhaColuna(linha, col1 + 2);
-         printf("%s", lista[i]);
+         {
+            textcolor(WHITE, _BLACK);
+            linhaColuna(linha, col1 + 2);
+            printf("                              ");
+            linhaColuna(linha, col1 + 2);
+            printf("%s", lista[i]);
+         }
          linha += 2;
       }
 
@@ -172,178 +408,13 @@ int menu(int lin1, int col1, int qtd, char lista[3][40])
    return opc;
 }
 
-// Função para guardar um usuário na memória
-void guardarNaMemoria(int indice, int id, char nome[30], char senha[10])
+int main() // funcao principal
 {
-   usuario[indice].id = id;
-   strcpy(usuario[indice].nome, nome);
-   strcpy(usuario[indice].senha, senha);
-}
 
-// Verificar se usuario ja existe
-bool verificarUsuario(int id, char nome[30])
-{
-   for (int i = 0; i < qtdUsuarios; i++)
-   {
-      if (usuario[i].id == id || strcmp(usuario[i].nome, nome) == 0)
-      {
-         return true;
-      }
-   }
-   return false;
-}
-
-// TESTE PARA CRIAÇÃO DE NOVO USUARIO
-void criarUsuario()
-{
-   char nome[30];
-   char senha[10];
-   int id, tecla;
-   while (true)
-   {
-      linhaColuna(10, 1);
-      printf("ID: ");
-      scanf("%i", &id);
-
-      printf("\nNOME: ");
-      fflush(stdin);
-      gets(nome);
-
-      if (verificarUsuario(id, nome))
-      {
-         linhaColuna(1, 45);
-         printf("\033[31mERRO: USUARIO COM ID OU NOME JA CADASTRADO!\033[0m\n");
-         linhaColuna(2, 50);
-         printf("\033[91m[ENTER] PARA INSERIR NOVOS DADOS\n");
-         linhaColuna(3, 53);
-         printf("\033[91m[ESC] PARA VOLTAR PARA MENU\033[0m\n");
-
-         tecla = getch();
-
-         if (tecla == 27)
-         {
-            break;
-         }
-         else
-         {
-            linhaColuna(10, 5);
-            printf("       "); // Limpa o ID
-            linhaColuna(12, 6);
-            printf("                             "); // Limpa o nome
-            linhaColuna(15, 1);
-
-            continue;
-         }
-      }
-
-      printf("\nSENHA: ");
-      fflush(stdin);
-      gets(senha);
-
-      guardarNaMemoria(qtdUsuarios, id, nome, senha);
-      qtdUsuarios++;
-
-      break;
-   }
-   main();
-}
-
-void listarUsuarios()
-{
-   int i, tecla;
-
-   carregarUsuariosDoCSV();
-
-   if (qtdUsuarios > 0)
-   {
-      for (i = 0; i < qtdUsuarios; i++)
-      {
-         printf("-----------------------------\n");
-         printf("USUARIO %i\n", i + 1);
-         printf("ID...: %i\n", usuario[i].id);
-         printf("NOME.: %s\n", usuario[i].nome);
-         printf("SENHA: %s\n", usuario[i].senha);
-      }
-      printf("-----------------------------\n");
-   }
-   else
-   {
-      linhaColuna(2, 46);
-      printf("SEM USUARIOS CADASTRADOS");
-   }
-
-   tecla = getch();
-
-   if ((tecla == 27) || (tecla == 13))
-   {
-      clear();
-      exit;
-   }
-}
-
-// Gerar CSV
-void gerarCSV(struct Usuarios usuario[MAX_USUARIOS], int quantidade)
-{
-   FILE *arquivo = fopen("dados.csv", "w");
-
-   if (arquivo == NULL)
-   {
-      linhaColuna(1, 45);
-      printf("\033[31mERRO AO ABRIR O ARQUIVO\033[0m\n");
-      return;
-   }
-
-   // Cabeçalho do CSV
-   fprintf(arquivo, "ID,NOME,SENHA\n");
-
-   for (int i = 0; i < quantidade; i++)
-   {
-      fprintf(arquivo, "%d,%s,%s\n", usuario[i].id, usuario[i].nome, usuario[i].senha);
-   }
-
-   fclose(arquivo);
-   linhaColuna(1,40);
-   printf("\033[32mArquivo CSV GERADO COM SUCESSO!\033[0m\n");
-}
-
-void carregarUsuariosDoCSV()
-{
-   FILE *arquivo = fopen("dados.csv", "r");
-
-   if (arquivo == NULL)
-   {
-      linhaColuna(1, 44);
-      printf("\033[31mERRO AO ABRIR O ARQUIVO CSV\033[0m\n");
-      return;
-   }
-
-   char linha[100];
-   int id;
-   char nome[30], senha[10];
-
-   // Ignora o cabeçalho
-   fgets(linha, sizeof(linha), arquivo);
-
-   qtdUsuarios = 0; // Reinicia a contagem de usuários
-
-   while (fgets(linha, sizeof(linha), arquivo))
-   {
-      // Extrai os dados da linha usando sscanf
-      sscanf(linha, "%d,%29[^,],%9[^\n]", &id, nome, senha);
-
-      // Armazena o usuário na estrutura
-      guardarNaMemoria(qtdUsuarios, id, nome, senha);
-      qtdUsuarios++;
-   }
-
-   fclose(arquivo);
-}
-
-int main()
-{
+   carregarUsuariosDoTXT();
 
    int opc;
-   char lista[6][40] = {"CRIAR NOVO USUARIO", "ATUALIZAR USUARIO", "EXCLUIR USUARIO", "LISTAR USUARIOS", "GERAR CSV", "SAIR"};
+   char lista[6][40] = {"CRIAR NOVO USUARIO", "ATUALIZAR USUARIO", "EXCLUIR USUARIO", "LISTAR USUARIOS", "GERAR TXT", "SAIR"};
 
    setlocale(LC_ALL, "portuguese");
    clear();
@@ -359,25 +430,37 @@ int main()
          break;
       }
 
+      if (opc == 2)
+      {
+         clear();
+         atualizarUsuario();
+      }
+
+      if (opc == 3)
+      {
+         clear();
+         excluirUsuario();
+      }
+
       if (opc == 4)
       {
          clear();
          listarUsuarios();
       }
 
-      if (opc == 5) {
+      if (opc == 5)
+      {
          clear();
-         gerarCSV(usuario, qtdUsuarios);
+         gerarTXT(usuario, qtdUsuarios);
       }
 
       if (opc == 6)
       {
-         TextColor(WHITE, _BLACK);
+         textcolor(WHITE, _BLACK);
          clear();
          break;
       }
    }
 
-   TextColor(WHITE, _BLACK);
    return 0;
 }
