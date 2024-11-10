@@ -5,7 +5,6 @@
 #include <stdbool.h>
 #include <conio.h>
 #include <string.h>
-#include <openssl/sha.h>
 
 #define MAX_USUARIOS 100
 
@@ -13,33 +12,23 @@ struct Usuarios
 {
    int id;
    char nome[30];
-   char senha[65];
-};
-
-struct Senhas
-{
-   char senha[65];
+   char senha[10];
 };
 
 struct Usuarios usuario[MAX_USUARIOS];
-struct Senhas senhas[MAX_USUARIOS];
 int qtdUsuarios = 0;
 int indiceUsuario = 0;
 
 int main();
 int menu(int lin1, int col1, int qtd, char lista[3][40]);
 void criarUsuario();
-void guardarNaMemoria(int indice, int id, char nome[30], char senha[65]);
+void guardarNaMemoria(int indice, int id, char nome[30], char senha[10]);
 bool verificarUsuario(int id, char nome[30]);
 void linhaColuna(int lin, int col);
 void textcolor(int letra, int fundo);
 void gerarTXT(struct Usuarios usuario[MAX_USUARIOS], int quantidade);
-void criptografarSenha(char *senha, char *senhaCriptografada);
 void carregarUsuariosDoTXT();
 void listarUsuarios();
-bool loginAdmin();
-void listarUsuariosComDescriptografia();
-void guardarSenhas(char senha[65], int indice);
 
 enum // COR DA LETRA
 {
@@ -106,11 +95,10 @@ void textcolor(int letra, int fundo) // procedmento cores texto e fundo
    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), letra + fundo);
 }
 
-void criarUsuario() // novo usuario
+void criarUsuario() // novo usurio
 {
    char nome[30];
-   char senha[65];
-   char senhaCriptografada[65];
+   char senha[10];
    int id, tecla;
 
    while (true)
@@ -152,10 +140,7 @@ void criarUsuario() // novo usuario
       gets(senha);
       senha[strcspn(senha, "\n")] = 0;
 
-      guardarSenhas(senha, qtdUsuarios);
-      criptografarSenha(senha, senhaCriptografada);
-
-      guardarNaMemoria(qtdUsuarios, id, nome, senhaCriptografada);
+      guardarNaMemoria(qtdUsuarios, id, nome, senha);
       qtdUsuarios++;
 
       gerarTXT(usuario, qtdUsuarios);
@@ -163,11 +148,6 @@ void criarUsuario() // novo usuario
    }
 
    main();
-}
-
-void guardarSenhas(char senha[65], int indice)
-{
-   strcpy(senhas[indice].senha, senha);
 }
 
 int procurarUsuario()
@@ -201,14 +181,12 @@ int procurarUsuario()
 
 void atualizarUsuario()
 {
-   char novoNome[30], novaSenha[10], novaSenhaCriptografada[65];
-   char confirmarAlteracao;
+   char novoNome[30], novaSenha[10];
    int indice;
-
    // procura
    indice = procurarUsuario();
 
-   if (indice == -1)
+   if (indice == -1) 
    {
       return;
    }
@@ -220,41 +198,18 @@ void atualizarUsuario()
    gets(novoNome);
    novoNome[strcspn(novoNome, "\n")] = 0;
 
-   printf("DIGITE A NOVA SENHA: ");
+   printf("Digite a nova senha: ");
    fflush(stdin);
    fgets(novaSenha, sizeof(novaSenha), stdin);
    novaSenha[strcspn(novaSenha, "\n")] = 0;
 
-   criptografarSenha(novaSenha, novaSenhaCriptografada);
+   strcpy(usuario[indice].nome, novoNome);
+   strcpy(usuario[indice].senha, novaSenha);
 
-   linhaColuna(12, 1);
-   printf("                          ");
-   linhaColuna(12, 1);
-   printf("CONFIRMAR ALTERAÇOES?");
-   linhaColuna(13, 1);
-   printf("NOME: %s", novoNome);
-   linhaColuna(14, 1);
-   printf("SENHA: %s", novaSenha);
+   gerarTXT(usuario, qtdUsuarios);
 
-   linhaColuna(15, 1);
-   printf("PRESSIONE 'S' PARA CONFIRMAR OU 'N' PARA CANCELAR: ");
-   fflush(stdin);
-   confirmarAlteracao = getch();
-
-   if (confirmarAlteracao == 'S' || confirmarAlteracao == 's')
-   {
-      strcpy(usuario[indice].nome, novoNome);
-      strcpy(usuario[indice].senha, novaSenha);
-      gerarTXT(usuario, qtdUsuarios);
-
-      linhaColuna(1, 30);
-      printf("USUÁRIO ATUALIZADO COM SUCESSO!\n");
-   }
-   else
-   {
-      linhaColuna(1, 30);
-      printf("ATUALIZAÇÃO CANCELADA!\n");
-   }
+   linhaColuna(1, 30);
+   printf("USUÁRIO ATUALIZADO COM SUCESSO!\n");
 }
 
 void excluirUsuario()
@@ -277,7 +232,7 @@ void excluirUsuario()
    printf("USUÁRIO EXCLUÍDO COM SUCESSO!\n");
 }
 
-void guardarNaMemoria(int indice, int id, char nome[30], char senha[65]) // Função para guardar um usuário na memória
+void guardarNaMemoria(int indice, int id, char nome[30], char senha[10]) // Função para guardar um usuário na memória
 {
    usuario[indice].id = id;
    strcpy(usuario[indice].nome, nome);
@@ -294,21 +249,6 @@ bool verificarUsuario(int id, char nome[30]) // Verificar se usuario ja existe
       }
    }
    return false;
-}
-
-void criptografarSenha(char *senha, char *senhaCriptografada)
-{
-   unsigned char hash[SHA256_DIGEST_LENGTH];
-   SHA256_CTX sha256_ctx;
-
-   SHA256_Init(&sha256_ctx);
-   SHA256_Update(&sha256_ctx, senha, strlen(senha));
-   SHA256_Final(hash, &sha256_ctx);
-
-   for (int i = 0; i < SHA256_DIGEST_LENGTH; i++)
-   {
-      sprintf(&senhaCriptografada[i * 2], "%02x", hash[i]);
-   }
 }
 
 void gerarTXT(struct Usuarios usuario[MAX_USUARIOS], int quantidade) // gerar txt
@@ -341,7 +281,7 @@ void carregarUsuariosDoTXT() // puxar dados do txt
    }
    char linha[100];
    int id;
-   char nome[30], senha[65];
+   char nome[30], senha[10];
    fgets(linha, sizeof(linha), arquivo);
    qtdUsuarios = 0;
    while (fgets(linha, sizeof(linha), arquivo))
@@ -373,56 +313,6 @@ void listarUsuarios() // listar
       linhaColuna(2, 46);
       printf("SEM USUARIOS CADASTRADOS");
    }
-   tecla = getch();
-   if ((tecla == 27) || (tecla == 13))
-   {
-      clear();
-      exit;
-   }
-}
-
-bool loginAdmin()
-{
-   char nome[30], senha[65];
-
-   printf("\nDigite o nome de usuario: ");
-   fflush(stdin);
-   gets(nome);
-
-   printf("Digite a senha: ");
-   fflush(stdin);
-   gets(senha);
-
-   if (strcmp(nome, "Adm123") == 0 && strcmp(senha, "123") == 0)
-   {
-      return true;
-   }
-   else
-   {
-      return false;
-   }
-}
-
-void listarUsuariosComDescriptografia()
-{
-   int i, tecla;
-   if (qtdUsuarios > 0)
-   {
-      for (i = 0; i < qtdUsuarios; i++)
-      {
-         printf("-----------------------------\n");
-         printf("USUARIO %i\n", i + 1);
-         printf("ID...: %i\n", usuario[i].id);
-         printf("NOME.: %s\n", usuario[i].nome);
-         printf("SENHA: %s\n", senhas[i].senha);
-      }
-      printf("-----------------------------\n");
-   }
-   else
-   {
-      printf("SEM USUARIOS CADASTRADOS\n");
-   }
-
    tecla = getch();
    if ((tecla == 27) || (tecla == 13))
    {
@@ -524,7 +414,7 @@ int main() // funcao principal
    carregarUsuariosDoTXT();
 
    int opc;
-   char lista[6][40] = {"CRIAR NOVO USUARIO", "ATUALIZAR USUARIO", "EXCLUIR USUARIO", "LISTAR USUARIOS", "ADM LOGIN", "SAIR"};
+   char lista[6][40] = {"CRIAR NOVO USUARIO", "ATUALIZAR USUARIO", "EXCLUIR USUARIO", "LISTAR USUARIOS", "GERAR TXT", "SAIR"};
 
    setlocale(LC_ALL, "portuguese");
    clear();
@@ -561,15 +451,7 @@ int main() // funcao principal
       if (opc == 5)
       {
          clear();
-         if (loginAdmin())
-         {
-            printf("\nLogin realizado com sucesso!\n");
-            listarUsuariosComDescriptografia();
-         }
-         else
-         {
-            printf("\nNome de usuario ou senha incorretos.\n");
-         }
+         gerarTXT(usuario, qtdUsuarios);
       }
 
       if (opc == 6)
