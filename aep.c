@@ -225,6 +225,7 @@ void atualizarUsuario()
    fgets(novaSenha, sizeof(novaSenha), stdin);
    novaSenha[strcspn(novaSenha, "\n")] = 0;
 
+   guardarSenhas(novaSenha, indice);
    criptografarSenha(novaSenha, novaSenhaCriptografada);
 
    linhaColuna(12, 1);
@@ -244,7 +245,7 @@ void atualizarUsuario()
    if (confirmarAlteracao == 'S' || confirmarAlteracao == 's')
    {
       strcpy(usuario[indice].nome, novoNome);
-      strcpy(usuario[indice].senha, novaSenha);
+      strcpy(usuario[indice].senha, novaSenhaCriptografada);
       gerarTXT(usuario, qtdUsuarios);
 
       linhaColuna(1, 30);
